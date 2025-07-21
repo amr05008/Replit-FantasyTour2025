@@ -72,4 +72,26 @@ The application is designed for simple deployment on cloud platforms:
 - Uses efficient time conversion algorithms for large datasets
 - Wide layout optimized for data-heavy presentations
 
+## Recent Changes
+
+### Latest Updates (July 21, 2025)
+- **Google Sheets Integration Fixed**: Connected to "Replit Stage Data" worksheet (gid=0)
+- **Enhanced Text Readability**: Increased font sizes (22-24px) and improved contrast for participant names
+- **Sad Panda Feature**: Added 🐼 emoji for last place participant
+- **Stage Progress Visualization**: Added comprehensive progress tracking with:
+  - Progress bar showing completion percentage
+  - Metrics for completed/remaining stages
+  - Visual stage indicators with colored dots
+  - Clear legend for stage status
+- **Data Source**: Successfully connected to user's Google Sheets with 5 participants (Jeremy, Leo, Charles, Aaron, Nate)
+- **Current Status**: App fully functional with real-time data updates, yellow jersey leader styling, and enhanced user experience
+
+### Working Features
+- Real-time Google Sheets data integration
+- Tour de France yellow jersey styling for leader
+- Time gap calculations and rankings
+- Auto-refresh every 5 minutes
+- Mobile-responsive design
+- Stage progress tracking
+
 The architecture prioritizes simplicity and rapid deployment while maintaining good performance through strategic caching and efficient data processing.

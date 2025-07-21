@@ -11,8 +11,8 @@ st.set_page_config(
     layout="wide"
 )
 
-# Google Sheets CSV export URL
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1_dYs_80Xdi39_-vtZYxt6l4Mj_0jFuHSf4p79zcBI4M/export?format=csv"
+# Google Sheets CSV export URL - "Replit Stage Data" worksheet
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1_dYs_80Xdi39_-vtZYxt6l4Mj_0jFuHSf4p79zcBI4M/export?format=csv&gid=0"
 
 def time_to_seconds(time_str):
     """Convert time string (H:MM:SS) to seconds for comparison"""
@@ -142,11 +142,45 @@ def main():
     
     sorted_participants, latest_stage = processed_data
     
-    # Display current stage info
+    # Display current stage info with progress visualization
     st.info(f"📊 Current standings after Stage {latest_stage}")
+    
+    # Stage Progress Visualization
+    total_stages = 21
+    progress_percentage = (latest_stage / total_stages) * 100
+    remaining_stages = total_stages - latest_stage
+    
+    # Create progress bar section
+    st.markdown("### 🏁 Tour Progress")
+    col1, col2, col3 = st.columns([2, 1, 1])
+    
+    with col1:
+        st.progress(progress_percentage / 100)
+        st.markdown(f"**Stage {latest_stage} of {total_stages}** ({progress_percentage:.1f}% complete)")
+    
+    with col2:
+        st.metric("Stages Completed", latest_stage, delta=None)
+    
+    with col3:
+        st.metric("Stages Remaining", remaining_stages, delta=None)
+    
+    # Visual stage indicator
+    st.markdown("#### Stage Status")
+    stage_indicators = ""
+    for stage in range(1, total_stages + 1):
+        if stage <= latest_stage:
+            stage_indicators += "🟢 "  # Completed stages
+        elif stage == latest_stage + 1:
+            stage_indicators += "🔴 "  # Next stage
+        else:
+            stage_indicators += "⚪ "  # Future stages
+    
+    st.markdown(f"**Stages 1-21:** {stage_indicators}")
+    st.markdown("🟢 Completed | 🔴 Next | ⚪ Future")
     
     # Create standings table
     st.markdown("---")
+    st.markdown("### 🏆 Current Standings")
     
     # Custom CSS for Tour de France styling
     st.markdown("""
@@ -185,7 +219,17 @@ def main():
                 """, unsafe_allow_html=True)
         else:
             # Regular participant display
-            medal = "🥈" if position == 2 else "🥉" if position == 3 else f"{position}."
+            total_participants = len(sorted_participants)
+            if position == total_participants:
+                # Last place gets sad panda
+                medal = f"{position}. 🐼"
+            elif position == 2:
+                medal = "🥈"
+            elif position == 3:
+                medal = "🥉"
+            else:
+                medal = f"{position}."
+            
             st.markdown(f"""
             <div style="background-color: #ffffff; padding: 15px; border-radius: 8px; margin: 8px 0; border: 2px solid #e9ecef; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
