@@ -14,6 +14,60 @@ st.set_page_config(
     layout="wide"
 )
 
+# Enhanced Meta Tags for URL Sharing (Open Graph, Twitter Cards, Schema.org)
+st.markdown("""
+    <meta property="og:title" content="Leo Sunshine's Fantasy Tour de France 2025 - Live Results" />
+    <meta property="og:description" content="Leo Sunshine Fantasy League Companion App" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://tdf2025.replit.app/" />
+    <meta property="og:image" content="attached_assets/ChatGPT Image Jul 22, 2025, 02_24_08 PM_1753208677017.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:site_name" content="Fantasy Tour de France 2025" />
+    
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Leo Sunshine's Fantasy Tour de France 2025 - Live Results" />
+    <meta name="twitter:description" content="Leo Sunshine Fantasy League Companion App" />
+    <meta name="twitter:image" content="attached_assets/ChatGPT Image Jul 22, 2025, 02_24_08 PM_1753208677017.png" />
+    
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Leo Sunshine's Fantasy Tour de France 2025",
+        "description": "Leo Sunshine Fantasy League Companion App",
+        "url": "https://tdf2025.replit.app/",
+        "applicationCategory": "SportsApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "author": {
+            "@type": "Person",
+            "name": "Aaron Roy"
+        },
+        "datePublished": "2025-07-22",
+        "keywords": "Tour de France, Fantasy Sports, Cycling, Real-time Results, Sports Analytics"
+    }
+    </script>
+    
+    <!-- Additional meta tags for better indexing -->
+    <meta name="description" content="Track real-time Fantasy Tour de France results with interactive standings, stage analysis, and team rosters. See who's wearing the yellow jersey!" />
+    <meta name="keywords" content="Tour de France, Fantasy Sports, Cycling, Real-time Results, Sports Analytics, Yellow Jersey" />
+    <meta name="author" content="Aaron Roy" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#1e1e1e" />
+    
+    <!-- Favicon and Apple Touch Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚴</text></svg>" />
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚴</text></svg>" />
+""", unsafe_allow_html=True)
+
 # Inject CSS with a custom background color
 st.markdown(
     """
@@ -59,6 +113,62 @@ def calculate_time_gap(leader_time, participant_time):
     if gap_seconds == 0:
         return "Leader"
     return f"+{seconds_to_time_str(gap_seconds)}"
+
+def generate_share_content(data):
+    """Generate dynamic content for social sharing based on current standings"""
+    if data is None or len(data) == 0:
+        return {
+            'title': "Leo Sunshine's Fantasy Tour de France 2025",
+            'description': "Track real-time Fantasy Tour de France results with interactive standings and stage analysis!"
+        }
+    
+    # Get current leader
+    leader = data.iloc[0] if not data.empty else None
+    total_stages = 21  # Tour de France standard
+    
+    if leader is not None:
+        leader_name = leader.get('Name', 'Unknown')
+        current_stage = 1  # You might want to calculate this from your data
+        
+        title = f"🚴 {leader_name} leads Fantasy Tour de France!"
+        description = f"Stage {current_stage}/{total_stages} complete. Follow live standings, stage analysis, and team rosters in Leo's Fantasy Tour!"
+    else:
+        title = "Leo Sunshine's Fantasy Tour de France 2025"
+        description = "Track real-time Fantasy Tour de France results with interactive standings, stage analysis, and team rosters!"
+    
+    return {
+        'title': title,
+        'description': description
+    }
+
+def create_sharing_buttons():
+    """Create social media sharing buttons"""
+    current_url = "https://your-app-url.replit.app"  # Replace with actual URL
+    
+    st.markdown("### 📱 Share This App")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        twitter_url = f"https://twitter.com/intent/tweet?url={current_url}&text=Check out Leo's Fantasy Tour de France 2025 results! 🚴⚡"
+        st.markdown(f"[🐦 Tweet]({twitter_url})", unsafe_allow_html=True)
+    
+    with col2:
+        facebook_url = f"https://www.facebook.com/sharer/sharer.php?u={current_url}"
+        st.markdown(f"[👥 Facebook]({facebook_url})", unsafe_allow_html=True)
+    
+    with col3:
+        linkedin_url = f"https://www.linkedin.com/sharing/share-offsite/?url={current_url}"
+        st.markdown(f"[💼 LinkedIn]({linkedin_url})", unsafe_allow_html=True)
+    
+    with col4:
+        # Copy to clipboard button (using JavaScript)
+        st.markdown(f"""
+        <button onclick="navigator.clipboard.writeText('{current_url}'); alert('Link copied to clipboard!');" 
+                style="background-color: #2d2d2d; color: white; border: 1px solid #555; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+            📋 Copy Link
+        </button>
+        """, unsafe_allow_html=True)
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def fetch_data():
@@ -368,12 +478,22 @@ def create_stage_performance_chart(stage_data, latest_stage):
             row=1, col=i
         )
     
-    # Update subplot titles color
+    # Update subplot titles color - use layout update method
     try:
-        if hasattr(fig, 'layout') and hasattr(fig.layout, 'annotations') and fig.layout.annotations:
-            for annotation in fig.layout.annotations:
-                annotation.font = dict(color='#FFFFFF', size=14)
-    except:
+        # Update annotations via layout update to avoid direct access issues
+        fig.update_layout(
+            annotations=[
+                dict(
+                    text=annotation.text if hasattr(annotation, 'text') else '',
+                    x=annotation.x if hasattr(annotation, 'x') else 0.5,
+                    y=annotation.y if hasattr(annotation, 'y') else 1,
+                    xref=annotation.xref if hasattr(annotation, 'xref') else 'paper',
+                    yref=annotation.yref if hasattr(annotation, 'yref') else 'paper',
+                    font=dict(color='#FFFFFF', size=14)
+                ) for annotation in (fig.layout.annotations or [])
+            ]
+        )
+    except Exception:
         pass  # Skip if annotations not available
     
     return fig
@@ -968,6 +1088,11 @@ def main():
             create_riders_display(team_rosters)
         else:
             st.error("Unable to load rider roster data. Please check the Google Sheets connection.")
+    
+    # Add sharing section at the bottom of the application
+    st.markdown("---")  # Add separator line
+    with st.expander("📱 Share This App", expanded=False):
+        create_sharing_buttons()
 
 if __name__ == "__main__":
     main()

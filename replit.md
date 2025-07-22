@@ -75,6 +75,16 @@ The application is designed for simple deployment on cloud platforms:
 ## Recent Changes
 
 ### Latest Updates (July 22, 2025)
+- **URL Sharing Enhancement**: Comprehensive social media optimization for text message sharing
+  - Added Open Graph meta tags for rich link previews across all platforms
+  - Implemented Twitter Cards for enhanced Twitter/X sharing experience
+  - Integrated Schema.org structured data for better search engine understanding
+  - Created dynamic social preview image generator using SVG for scalability
+  - Added sharing buttons component with Twitter, Facebook, LinkedIn, and copy-link functionality
+  - Collapsible sharing section integrated into main app header
+  - SEO improvements with meta descriptions, keywords, and theme color specifications
+  - Preview images automatically show current leader and stage progress
+  - All sharing content dynamically updates based on real-time race data
 - **Team Riders Component**: Added dedicated rider roster display as third navigation tab
   - Integrated "Replit_Riders" worksheet (GID: 667768222) as separate data source
   - Created "👥 Team Riders" tab showing all riders organized by team owner
