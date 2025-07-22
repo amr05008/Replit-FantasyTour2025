@@ -27,8 +27,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Google Sheets CSV export URL - "Replit Stage Data" worksheet
+# Google Sheets CSV export URLs
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1_dYs_80Xdi39_-vtZYxt6l4Mj_0jFuHSf4p79zcBI4M/export?format=csv&gid=0"
+RIDERS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1_dYs_80Xdi39_-vtZYxt6l4Mj_0jFuHSf4p79zcBI4M/export?format=csv&gid=667768222"
 
 def time_to_seconds(time_str):
     """Convert time string (H:MM:SS) to seconds for comparison"""
@@ -77,6 +78,53 @@ def fetch_data():
     except Exception as e:
         st.error(f"Error fetching data: {str(e)}")
         return None
+
+@st.cache_data(ttl=300)  # Cache for 5 minutes
+def fetch_riders_data():
+    """Fetch riders data from the Replit_Riders worksheet"""
+    try:
+        # Use session to handle redirects properly
+        session = requests.Session()
+        response = session.get(RIDERS_SHEET_URL, allow_redirects=True)
+        response.raise_for_status()
+        
+        # Read CSV data
+        from io import StringIO
+        csv_data = StringIO(response.text)
+        df = pd.read_csv(csv_data)
+        
+        return df
+    except Exception as e:
+        st.error(f"Error fetching riders data: {str(e)}")
+        return None
+
+def process_riders_data(riders_df):
+    """Process the Replit_Riders worksheet data"""
+    if riders_df is None:
+        return None
+    
+    participants = ['Jeremy', 'Leo', 'Charles', 'Aaron', 'Nate']
+    team_rosters = {participant: [] for participant in participants}
+    
+    try:
+        # Clean column names by stripping whitespace
+        riders_df.columns = riders_df.columns.str.strip()
+        
+        # Process each row in the riders DataFrame
+        for idx, row in riders_df.iterrows():
+            if pd.notna(row.get('Rider')) and pd.notna(row.get('Team')):
+                rider_name = str(row['Rider']).strip()
+                team_name = str(row['Team']).strip()
+                
+                # Add rider to the appropriate team if it's one of our participants
+                if team_name in participants:
+                    team_rosters[team_name].append(rider_name)
+    
+    except Exception as e:
+        st.error(f"Error processing rider data: {str(e)}")
+        return None
+    
+    return team_rosters
 
 def process_data(df):
     """Process the raw CSV data to get current standings and stage-by-stage data"""
@@ -416,6 +464,65 @@ def create_gap_evolution_chart(stage_data, latest_stage):
     
     return fig
 
+def create_riders_display(team_rosters):
+    """Create the team riders display with cards for each team"""
+    if not team_rosters:
+        st.error("No rider data available")
+        return
+    
+    # Color scheme for team cards (matching the existing chart colors)
+    team_colors = {
+        'Jeremy': '#FFD700',  # Gold
+        'Leo': '#FF6B6B',     # Red
+        'Charles': '#4ECDC4',  # Teal
+        'Aaron': '#45B7D1',   # Blue
+        'Nate': '#96CEB4'     # Green
+    }
+    
+    st.markdown("### 👥 Team Rosters")
+    st.markdown("Current riders for each fantasy team in the Tour de France 2025")
+    
+    # Create columns for team display
+    cols = st.columns(len(team_rosters))
+    
+    for idx, (team_owner, riders) in enumerate(team_rosters.items()):
+        with cols[idx]:
+            # Get team color
+            color = team_colors.get(team_owner, '#333333')
+            
+            # Create team card with proper HTML escaping
+            riders_list = []
+            for i, rider in enumerate(riders, 1):
+                riders_list.append(f"{i}. {rider}")
+            
+            # Display team header
+            st.markdown(f"### 🚴 {team_owner}")
+            st.markdown(f"<div style='color: {color}; font-weight: bold; margin-bottom: 10px;'>{len(riders)} Riders</div>", unsafe_allow_html=True)
+            
+            # Display riders as a simple list
+            if riders:
+                for i, rider in enumerate(riders, 1):
+                    st.write(f"{i}. {rider}")
+            else:
+                st.write("No riders assigned")
+            
+            st.markdown("---")
+    
+    # Add summary statistics
+    st.markdown("---")
+    
+    # Create summary row
+    total_riders = sum(len(riders) for riders in team_rosters.values())
+    avg_riders = total_riders / len(team_rosters) if team_rosters else 0
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Riders", total_riders)
+    with col2:
+        st.metric("Average per Team", f"{avg_riders:.1f}")
+    with col3:
+        st.metric("Teams", len(team_rosters))
+
 def get_dark_theme_css():
     """Return dark theme CSS"""
     return """
@@ -680,7 +787,9 @@ def main():
     # Fetch and process data
     with st.spinner("Fetching latest standings..."):
         df = fetch_data()
+        riders_df = fetch_riders_data()
         processed_data = process_data(df)
+        team_rosters = process_riders_data(riders_df)
     
     if processed_data is None:
         st.error("Unable to load standings data. Please check the Google Sheets connection.")
@@ -689,7 +798,7 @@ def main():
     sorted_participants, latest_stage, stage_by_stage_data = processed_data
     
     # Create main navigation tabs
-    tab1, tab2 = st.tabs(["🏆 Current Standings", "📊 Stage Analysis"])
+    tab1, tab2, tab3 = st.tabs(["🏆 Current Standings", "📊 Stage Analysis", "👥 Team Riders"])
     
     with tab1:
         # Create standings table - moved to top
@@ -852,6 +961,13 @@ def main():
         else:
             st.info("📊 Stage analysis will be available once multiple stages are completed.")
             st.markdown('<p style="color: #e0e0e0;">Current stage data is insufficient for detailed analysis. Charts will appear as more stage data becomes available.</p>', unsafe_allow_html=True)
+    
+    with tab3:
+        # Team Riders Display
+        if team_rosters:
+            create_riders_display(team_rosters)
+        else:
+            st.error("Unable to load rider roster data. Please check the Google Sheets connection.")
 
 if __name__ == "__main__":
     main()

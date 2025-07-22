@@ -75,6 +75,12 @@ The application is designed for simple deployment on cloud platforms:
 ## Recent Changes
 
 ### Latest Updates (July 22, 2025)
+- **Team Riders Component**: Added dedicated rider roster display as third navigation tab
+  - Integrated "Replit_Riders" worksheet (GID: 667768222) as separate data source
+  - Created "👥 Team Riders" tab showing all riders organized by team owner
+  - Implemented team-colored displays with rider counts and summary statistics
+  - Fixed data processing issues with CSV column whitespace handling
+  - Each team now shows proper rider listings (Jeremy: 3 riders, Leo: 3 riders, etc.)
 - **Layout Reorganization**: Improved component positioning for better user experience
   - Moved "🏆 Current Standings" section directly below header for immediate visibility
   - Repositioned stage progress information below standings table
@@ -125,6 +131,8 @@ The application is designed for simple deployment on cloud platforms:
 - Theme-consistent UI components and styling
 - Interactive stage-by-stage performance charts (Plotly integration)
 - Comprehensive analytical dashboard with multiple chart types
-- Tabbed navigation for organized content presentation
+- Team riders roster display with dedicated worksheet integration
+- Three-tab navigation: Current Standings, Stage Analysis, Team Riders
+- Team-colored rider cards with summary statistics
 
 The architecture prioritizes simplicity and rapid deployment while maintaining good performance through strategic caching and efficient data processing.
