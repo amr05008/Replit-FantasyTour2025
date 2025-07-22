@@ -3,6 +3,9 @@ import pandas as pd
 import requests
 from datetime import datetime
 import time
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 # Page configuration
 st.set_page_config(
@@ -63,13 +66,14 @@ def fetch_data():
         return None
 
 def process_data(df):
-    """Process the raw CSV data to get current standings"""
+    """Process the raw CSV data to get current standings and stage-by-stage data"""
     if df is None:
         return None
     
     # Find the participant rows
     participants = ['Jeremy', 'Leo', 'Charles', 'Aaron', 'Nate']
     participant_data = {}
+    stage_by_stage_data = {}
     
     # Find the latest stage with data (non-zero times)
     latest_stage = 1
@@ -80,23 +84,33 @@ def process_data(df):
             participant_name = str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else ""
             
             if participant_name in participants:
-                # Find the latest stage with actual time data
                 stage_times = []
+                all_stage_data = {}
+                
+                # Collect all stage times for this participant
                 for col_idx in range(1, min(22, len(row))):  # Stages 1-21
                     if col_idx < len(row):
                         time_val = row.iloc[col_idx]
                         if pd.notna(time_val) and str(time_val).strip() != "0:00:00" and str(time_val).strip() != "":
                             stage_times.append((col_idx, time_val))
+                            all_stage_data[col_idx] = {
+                                'time': time_val,
+                                'time_seconds': time_to_seconds(time_val)
+                            }
                             latest_stage = max(latest_stage, col_idx)
                 
                 if stage_times:
-                    # Get the most recent time
+                    # Get the most recent time for current standings
                     latest_time = stage_times[-1][1]
                     participant_data[participant_name] = {
                         'time': latest_time,
                         'time_seconds': time_to_seconds(latest_time),
                         'stage': latest_stage
                     }
+                    
+                    # Store all stage data for charts
+                    stage_by_stage_data[participant_name] = all_stage_data
+    
     except Exception as e:
         st.error(f"Error processing data: {str(e)}")
         return None
@@ -117,9 +131,320 @@ def process_data(df):
         data['gap'] = calculate_time_gap(leader_time, data['time_seconds'])
         data['position'] = sorted_participants.index((name, data)) + 1
     
-    return sorted_participants, latest_stage
+    return sorted_participants, latest_stage, stage_by_stage_data
+
+def create_cumulative_time_chart(stage_data, latest_stage):
+    """Create cumulative time progression chart"""
+    fig = go.Figure()
+    
+    # Color scheme for participants
+    colors = {
+        'Jeremy': '#FFD700',  # Gold for leader styling
+        'Leo': '#FF6B6B',
+        'Charles': '#4ECDC4', 
+        'Aaron': '#45B7D1',
+        'Nate': '#96CEB4'
+    }
+    
+    for participant, stages in stage_data.items():
+        if stages:  # Only show participants with data
+            stages_list = []
+            times_list = []
+            
+            for stage in range(1, latest_stage + 1):
+                if stage in stages:
+                    stages_list.append(stage)
+                    times_list.append(stages[stage]['time_seconds'] / 3600)  # Convert to hours
+            
+            if stages_list:
+                # Create custom hover text with exact times
+                hover_text = []
+                for stage in stages_list:
+                    time_str = stages[stage]['time']
+                    hover_text.append(f'<b>{participant}</b><br>Stage: {stage}<br>Cumulative Time: {time_str}')
+                
+                fig.add_trace(go.Scatter(
+                    x=stages_list,
+                    y=times_list,
+                    mode='lines+markers',
+                    name=participant,
+                    line=dict(color=colors.get(participant, '#FFFFFF'), width=3),
+                    marker=dict(size=8, color=colors.get(participant, '#FFFFFF')),
+                    hovertemplate='%{text}<extra></extra>',
+                    text=hover_text
+                ))
+    
+    # Dark theme styling
+    fig.update_layout(
+        title={
+            'text': 'Cumulative Time Progression by Stage',
+            'x': 0.5,
+            'font': {'size': 20, 'color': '#FFFFFF'}
+        },
+        xaxis_title='Stage',
+        yaxis_title='Cumulative Time (Hours)',
+        plot_bgcolor='#1e1e1e',
+        paper_bgcolor='#1e1e1e',
+        font=dict(color='#FFFFFF'),
+        xaxis=dict(
+            gridcolor='#404040',
+            tickmode='linear',
+            dtick=1,
+            range=[0.5, latest_stage + 0.5]
+        ),
+        yaxis=dict(gridcolor='#404040'),
+        legend=dict(
+            bgcolor='rgba(45, 45, 45, 0.8)',
+            bordercolor='#404040',
+            borderwidth=1
+        ),
+        margin=dict(l=0, r=0, t=50, b=0)
+    )
+    
+    return fig
+
+def create_stage_performance_chart(stage_data, latest_stage):
+    """Create individual stage performance chart"""
+    # Calculate stage-specific times (time between stages)
+    stage_performance = {}
+    stage_performance_seconds = {}
+    
+    for participant, stages in stage_data.items():
+        stage_performance[participant] = {}
+        stage_performance_seconds[participant] = {}
+        prev_time = 0
+        
+        for stage in range(1, latest_stage + 1):
+            if stage in stages:
+                current_time = stages[stage]['time_seconds']
+                if stage == 1:
+                    stage_time = current_time
+                else:
+                    stage_time = current_time - prev_time
+                stage_performance[participant][stage] = stage_time / 60  # Convert to minutes for y-axis
+                stage_performance_seconds[participant][stage] = stage_time  # Keep seconds for hover text
+                prev_time = current_time
+    
+    # Create subplot for each stage
+    fig = make_subplots(
+        rows=1, cols=min(latest_stage, 5),  # Show max 5 stages at once
+        subplot_titles=[f'Stage {i}' for i in range(max(1, latest_stage-4), latest_stage + 1)]
+    )
+    
+    colors = {
+        'Jeremy': '#FFD700',
+        'Leo': '#FF6B6B', 
+        'Charles': '#4ECDC4',
+        'Aaron': '#45B7D1',
+        'Nate': '#96CEB4'
+    }
+    
+    stages_to_show = list(range(max(1, latest_stage-4), latest_stage + 1))
+    
+    for col, stage in enumerate(stages_to_show, 1):
+        participants = []
+        times = []
+        bar_colors = []
+        hover_texts = []
+        
+        for participant in stage_performance:
+            if stage in stage_performance[participant]:
+                participants.append(participant)
+                times.append(stage_performance[participant][stage])
+                bar_colors.append(colors.get(participant, '#FFFFFF'))
+                
+                # Convert seconds to H:MM:SS format for hover
+                stage_seconds = stage_performance_seconds[participant][stage]
+                stage_time_str = seconds_to_time_str(int(stage_seconds))
+                hover_texts.append(f'<b>{participant}</b><br>Stage {stage} Time: {stage_time_str}')
+        
+        if participants:
+            fig.add_trace(
+                go.Bar(
+                    x=participants,
+                    y=times,
+                    name=f'Stage {stage}',
+                    marker_color=bar_colors,
+                    showlegend=False,
+                    hovertemplate='%{text}<extra></extra>',
+                    text=hover_texts
+                ),
+                row=1, col=col
+            )
+    
+    # Dark theme styling
+    fig.update_layout(
+        title={
+            'text': 'Individual Stage Performance (Minutes)',
+            'x': 0.5,
+            'font': {'size': 20, 'color': '#FFFFFF'}
+        },
+        plot_bgcolor='#1e1e1e',
+        paper_bgcolor='#1e1e1e',
+        font=dict(color='#FFFFFF'),
+        margin=dict(l=0, r=0, t=80, b=0),
+        height=400
+    )
+    
+    # Update all subplot axes
+    for i in range(1, min(latest_stage, 5) + 1):
+        fig.update_xaxes(
+            tickangle=45,
+            gridcolor='#404040',
+            row=1, col=i
+        )
+        fig.update_yaxes(
+            gridcolor='#404040',
+            row=1, col=i
+        )
+    
+    return fig
+
+def create_gap_evolution_chart(stage_data, latest_stage):
+    """Create chart showing gap evolution relative to leader"""
+    fig = go.Figure()
+    
+    colors = {
+        'Jeremy': '#FFD700',
+        'Leo': '#FF6B6B',
+        'Charles': '#4ECDC4',
+        'Aaron': '#45B7D1', 
+        'Nate': '#96CEB4'
+    }
+    
+    # Find leader at each stage and calculate gaps
+    for participant, stages in stage_data.items():
+        if stages:
+            stages_list = []
+            gaps_list = []
+            
+            for stage in range(1, latest_stage + 1):
+                if stage in stages:
+                    # Find leader time for this stage
+                    leader_time = min([
+                        stage_data[p][stage]['time_seconds'] 
+                        for p in stage_data 
+                        if stage in stage_data[p]
+                    ])
+                    
+                    gap_seconds = stages[stage]['time_seconds'] - leader_time
+                    stages_list.append(stage)
+                    gaps_list.append(gap_seconds / 60)  # Convert to minutes
+            
+            if stages_list and any(gap > 0 for gap in gaps_list):  # Don't show leader line
+                # Create custom hover text with exact gap times
+                hover_text = []
+                for i, stage in enumerate(stages_list):
+                    gap_seconds = gaps_list[i] * 60  # Convert back to seconds
+                    gap_time_str = calculate_time_gap(0, int(gap_seconds))  # Format as "+H:MM:SS"
+                    hover_text.append(f'<b>{participant}</b><br>Stage: {stage}<br>Gap to Leader: {gap_time_str}')
+                
+                fig.add_trace(go.Scatter(
+                    x=stages_list,
+                    y=gaps_list,
+                    mode='lines+markers',
+                    name=participant,
+                    line=dict(color=colors.get(participant, '#FFFFFF'), width=3),
+                    marker=dict(size=8, color=colors.get(participant, '#FFFFFF')),
+                    hovertemplate='%{text}<extra></extra>',
+                    text=hover_text
+                ))
+    
+    # Dark theme styling
+    fig.update_layout(
+        title={
+            'text': 'Time Gap Evolution (Minutes Behind Leader)',
+            'x': 0.5,
+            'font': {'size': 20, 'color': '#FFFFFF'}
+        },
+        xaxis_title='Stage',
+        yaxis_title='Gap to Leader (Minutes)',
+        plot_bgcolor='#1e1e1e',
+        paper_bgcolor='#1e1e1e',
+        font=dict(color='#FFFFFF'),
+        xaxis=dict(
+            gridcolor='#404040',
+            tickmode='linear',
+            dtick=1,
+            range=[0.5, latest_stage + 0.5]
+        ),
+        yaxis=dict(gridcolor='#404040'),
+        legend=dict(
+            bgcolor='rgba(45, 45, 45, 0.8)',
+            bordercolor='#404040',
+            borderwidth=1
+        ),
+        margin=dict(l=0, r=0, t=50, b=0)
+    )
+    
+    return fig
+
+def get_dark_theme_css():
+    """Return dark theme CSS"""
+    return """
+    <style>
+    .stApp {
+        background-color: #1e1e1e;
+        color: #ffffff;
+    }
+    .stMarkdown {
+        color: #ffffff;
+    }
+    .element-container {
+        background-color: #1e1e1e;
+    }
+    .dark-card {
+        background-color: #2d2d2d !important;
+        border: 2px solid #404040 !important;
+        color: #ffffff !important;
+    }
+    .dark-leader-card {
+        background-color: #FFD700 !important;
+        color: #000000 !important;
+    }
+    .stMetric {
+        background-color: #2d2d2d;
+        border-radius: 8px;
+        padding: 15px;
+    }
+    .stMetric > div {
+        color: #ffffff;
+    }
+    .stProgress > div > div > div > div {
+        background-color: #404040;
+    }
+    .stProgress > div > div > div > div > div {
+        background-color: #FFD700 !important;
+    }
+    .stInfo {
+        background-color: #2d2d2d !important;
+        color: #ffffff !important;
+    }
+    .stInfo > div {
+        color: #ffffff !important;
+    }
+    .stButton > button {
+        background-color: #404040;
+        color: #ffffff;
+        border: 1px solid #606060;
+    }
+    .stButton > button:hover {
+        background-color: #505050;
+        border: 1px solid #707070;
+    }
+    .stSpinner {
+        color: #ffffff !important;
+    }
+    div[data-testid="stMarkdownContainer"] {
+        color: #ffffff;
+    }
+    </style>
+    """
 
 def main():
+    # Apply dark theme CSS
+    st.markdown(get_dark_theme_css(), unsafe_allow_html=True)
+    
     # Title and header
     st.title("🚴 Fantasy Tour de France 2025")
     st.markdown("### General Classification Standings")
@@ -140,129 +465,173 @@ def main():
         st.error("Unable to load standings data. Please check the Google Sheets connection.")
         return
     
-    sorted_participants, latest_stage = processed_data
+    sorted_participants, latest_stage, stage_by_stage_data = processed_data
     
-    # Display current stage info with progress visualization
-    st.info(f"📊 Current standings after Stage {latest_stage}")
+    # Create main navigation tabs
+    tab1, tab2 = st.tabs(["🏆 Current Standings", "📊 Stage Analysis"])
     
-    # Stage Progress Visualization
-    total_stages = 21
-    progress_percentage = (latest_stage / total_stages) * 100
-    remaining_stages = total_stages - latest_stage
-    
-    # Create progress bar section
-    st.markdown("### 🏁 Tour Progress")
-    col1, col2, col3 = st.columns([2, 1, 1])
-    
-    with col1:
-        st.progress(progress_percentage / 100)
-        st.markdown(f"**Stage {latest_stage} of {total_stages}** ({progress_percentage:.1f}% complete)")
-    
-    with col2:
-        st.metric("Stages Completed", latest_stage, delta=None)
-    
-    with col3:
-        st.metric("Stages Remaining", remaining_stages, delta=None)
-    
-    # Visual stage indicator
-    st.markdown("#### Stage Status")
-    stage_indicators = ""
-    for stage in range(1, total_stages + 1):
-        if stage <= latest_stage:
-            stage_indicators += "🟢 "  # Completed stages
-        elif stage == latest_stage + 1:
-            stage_indicators += "🔴 "  # Next stage
-        else:
-            stage_indicators += "⚪ "  # Future stages
-    
-    st.markdown(f"**Stages 1-21:** {stage_indicators}")
-    st.markdown("🟢 Completed | 🔴 Next | ⚪ Future")
-    
-    # Create standings table
-    st.markdown("---")
-    st.markdown("### 🏆 Current Standings")
-    
-    # Custom CSS for Tour de France styling
-    st.markdown("""
-    <style>
-    .leader-row {
-        background-color: #FFD700 !important;
-        font-weight: bold;
-    }
-    .standings-table {
-        font-size: 16px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    # Display standings
-    for i, (participant, data) in enumerate(sorted_participants):
-        position = data['position']
-        time_str = data['time']
-        gap = data['gap']
+    with tab1:
+        # Display current stage info with progress visualization
+        st.info(f"📊 Current standings after Stage {latest_stage}")
         
-        # Create columns for the display
-        pos_col, name_col, time_col, gap_col = st.columns([1, 3, 2, 2])
+        # Stage Progress Visualization
+        total_stages = 21
+        progress_percentage = (latest_stage / total_stages) * 100
+        remaining_stages = total_stages - latest_stage
         
-        # Apply yellow background for leader
-        if position == 1:
-            container = st.container()
-            with container:
+        # Create progress bar section
+        st.markdown("### 🏁 Tour Progress")
+        col1, col2, col3 = st.columns([2, 1, 1])
+        
+        with col1:
+            st.progress(progress_percentage / 100)
+            st.markdown(f"**Stage {latest_stage} of {total_stages}** ({progress_percentage:.1f}% complete)")
+        
+        with col2:
+            st.metric("Stages Completed", latest_stage, delta=None)
+        
+        with col3:
+            st.metric("Stages Remaining", remaining_stages, delta=None)
+        
+        # Visual stage indicator
+        st.markdown("#### Stage Status")
+        stage_indicators = ""
+        for stage in range(1, total_stages + 1):
+            if stage <= latest_stage:
+                stage_indicators += "🟢 "  # Completed stages
+            elif stage == latest_stage + 1:
+                stage_indicators += "🔴 "  # Next stage
+            else:
+                stage_indicators += "⚪ "  # Future stages
+        
+        st.markdown(f"**Stages 1-21:** {stage_indicators}")
+        st.markdown("🟢 Completed | 🔴 Next | ⚪ Future")
+        
+        # Create standings table
+        st.markdown("---")
+        st.markdown("### 🏆 Current Standings")
+        
+        # Custom CSS for Tour de France styling
+        st.markdown("""
+        <style>
+        .leader-row {
+            background-color: #FFD700 !important;
+            font-weight: bold;
+        }
+        .standings-table {
+            font-size: 16px;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        # Display standings
+        for i, (participant, data) in enumerate(sorted_participants):
+            position = data['position']
+            time_str = data['time']
+            gap = data['gap']
+            
+            # Create columns for the display
+            pos_col, name_col, time_col, gap_col = st.columns([1, 3, 2, 2])
+            
+            # Apply yellow background for leader
+            if position == 1:
+                container = st.container()
+                with container:
+                    st.markdown(f"""
+                    <div class="dark-leader-card" style="background-color: #FFD700; padding: 15px; border-radius: 8px; margin: 8px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 24px; font-weight: bold; color: #000000;">🥇 {position}. {participant}</span>
+                            <span style="font-size: 20px; font-weight: bold; color: #000000;">{time_str}</span>
+                            <span style="font-size: 18px; color: #B8860B; font-weight: bold;">👑 LEADER</span>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                # Regular participant display
+                total_participants = len(sorted_participants)
+                if position == total_participants:
+                    # Last place gets sad panda
+                    medal = f"{position}. 🐼"
+                elif position == 2:
+                    medal = "🥈"
+                elif position == 3:
+                    medal = "🥉"
+                else:
+                    medal = f"{position}."
+                
                 st.markdown(f"""
-                <div style="background-color: #FFD700; padding: 15px; border-radius: 8px; margin: 8px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div class="dark-card" style="background-color: #2d2d2d; padding: 15px; border-radius: 8px; margin: 8px 0; border: 2px solid #404040; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 24px; font-weight: bold; color: #000000;">🥇 {position}. {participant}</span>
-                        <span style="font-size: 20px; font-weight: bold; color: #000000;">{time_str}</span>
-                        <span style="font-size: 18px; color: #B8860B; font-weight: bold;">👑 LEADER</span>
+                        <span style="font-size: 22px; font-weight: bold; color: #ffffff;">{medal} {participant}</span>
+                        <span style="font-size: 18px; font-weight: 600; color: #e0e0e0;">{time_str}</span>
+                        <span style="font-size: 16px; color: #ff6b6b; font-weight: 600;">{gap}</span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-        else:
-            # Regular participant display
+        
+        # Additional information
+        st.markdown("---")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
             total_participants = len(sorted_participants)
-            if position == total_participants:
-                # Last place gets sad panda
-                medal = f"{position}. 🐼"
-            elif position == 2:
-                medal = "🥈"
-            elif position == 3:
-                medal = "🥉"
+            st.metric("Total Participants", total_participants)
+        
+        with col2:
+            leader_name = sorted_participants[0][0]
+            st.metric("Current Leader", leader_name)
+        
+        with col3:
+            if len(sorted_participants) > 1:
+                gap_to_second = sorted_participants[1][1]['gap']
+                st.metric("Gap to 2nd Place", gap_to_second)
             else:
-                medal = f"{position}."
+                st.metric("Gap to 2nd Place", "N/A")
+        
+        # Footer
+        st.markdown("---")
+        st.markdown(f"*Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Data refreshes every 5 minutes*")
+        st.markdown("*🟡 Yellow highlight indicates the current General Classification leader*")
+    
+    with tab2:
+        # Stage Analysis Charts
+        st.markdown("### 📊 Stage-by-Stage Performance Analysis")
+        
+        if latest_stage > 1 and stage_by_stage_data:
+            # Create chart selection
+            chart_option = st.selectbox(
+                "Select Analysis View:",
+                [
+                    "🏁 Cumulative Time Progression",
+                    "⚡ Individual Stage Performance", 
+                    "📈 Gap Evolution from Leader"
+                ]
+            )
             
-            st.markdown(f"""
-            <div style="background-color: #ffffff; padding: 15px; border-radius: 8px; margin: 8px 0; border: 2px solid #e9ecef; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 22px; font-weight: bold; color: #212529;">{medal} {participant}</span>
-                    <span style="font-size: 18px; font-weight: 600; color: #495057;">{time_str}</span>
-                    <span style="font-size: 16px; color: #dc3545; font-weight: 600;">{gap}</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # Additional information
-    st.markdown("---")
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        total_participants = len(sorted_participants)
-        st.metric("Total Participants", total_participants)
-    
-    with col2:
-        leader_name = sorted_participants[0][0]
-        st.metric("Current Leader", leader_name)
-    
-    with col3:
-        if len(sorted_participants) > 1:
-            gap_to_second = sorted_participants[1][1]['gap']
-            st.metric("Gap to 2nd Place", gap_to_second)
+            if chart_option == "🏁 Cumulative Time Progression":
+                st.plotly_chart(
+                    create_cumulative_time_chart(stage_by_stage_data, latest_stage),
+                    use_container_width=True
+                )
+                st.markdown("**Analysis:** Shows each participant's total cumulative time progression across all completed stages.")
+                
+            elif chart_option == "⚡ Individual Stage Performance":
+                st.plotly_chart(
+                    create_stage_performance_chart(stage_by_stage_data, latest_stage),
+                    use_container_width=True
+                )
+                st.markdown("**Analysis:** Displays individual stage times to identify stage winners and performance patterns.")
+                
+            elif chart_option == "📈 Gap Evolution from Leader":
+                st.plotly_chart(
+                    create_gap_evolution_chart(stage_by_stage_data, latest_stage),
+                    use_container_width=True
+                )
+                st.markdown("**Analysis:** Tracks how time gaps between participants and the leader evolve over stages.")
+        
         else:
-            st.metric("Gap to 2nd Place", "N/A")
-    
-    # Footer
-    st.markdown("---")
-    st.markdown(f"*Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Data refreshes every 5 minutes*")
-    st.markdown("*🟡 Yellow highlight indicates the current General Classification leader*")
+            st.info("📊 Stage analysis will be available once multiple stages are completed.")
+            st.markdown("Current stage data is insufficient for detailed analysis. Charts will appear as more stage data becomes available.")
 
 if __name__ == "__main__":
     main()

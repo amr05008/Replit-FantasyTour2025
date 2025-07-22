@@ -74,7 +74,22 @@ The application is designed for simple deployment on cloud platforms:
 
 ## Recent Changes
 
-### Latest Updates (July 21, 2025)
+### Latest Updates (July 22, 2025)
+- **Stage-by-Stage Performance Charts**: Added comprehensive analytical visualization using Plotly
+  - Interactive charts with dark theme integration and participant color coding
+  - Cumulative Time Progression: Line charts showing total time evolution across stages
+  - Individual Stage Performance: Bar charts displaying stage-specific times and winners
+  - Gap Evolution Analysis: Tracks time gaps relative to leader over stages
+  - Tabbed interface: "Current Standings" and "Stage Analysis" for organized navigation
+  - Chart selection dropdown for easy switching between analysis views
+  - Responsive design with hover tooltips and mobile optimization
+- **Enhanced Data Processing**: Extended data model to capture all stage times for analytical insights
+- **Dark Mode Implementation**: Implemented sleek dark-only theme design
+  - Removed theme toggle for streamlined single-theme experience
+  - Dark theme: #1e1e1e background, #2d2d2d cards, white text
+  - All components styled for dark mode: progress bars, metrics, buttons, cards
+  - Yellow jersey leader styling optimized for dark theme contrast
+  - Improved readability with carefully chosen color contrasts
 - **Google Sheets Integration Fixed**: Connected to "Replit Stage Data" worksheet (gid=0)
 - **Enhanced Text Readability**: Increased font sizes (22-24px) and improved contrast for participant names
 - **Sad Panda Feature**: Added 🐼 emoji for last place participant
@@ -84,7 +99,7 @@ The application is designed for simple deployment on cloud platforms:
   - Visual stage indicators with colored dots
   - Clear legend for stage status
 - **Data Source**: Successfully connected to user's Google Sheets with 5 participants (Jeremy, Leo, Charles, Aaron, Nate)
-- **Current Status**: App fully functional with real-time data updates, yellow jersey leader styling, and enhanced user experience
+- **Current Status**: App fully functional with real-time data updates, yellow jersey leader styling, sleek dark mode design, comprehensive stage analysis charts, and enhanced analytical user experience
 
 ### Working Features
 - Real-time Google Sheets data integration
@@ -93,5 +108,10 @@ The application is designed for simple deployment on cloud platforms:
 - Auto-refresh every 5 minutes
 - Mobile-responsive design
 - Stage progress tracking
+- Sleek dark mode design with optimized contrast
+- Theme-consistent UI components and styling
+- Interactive stage-by-stage performance charts (Plotly integration)
+- Comprehensive analytical dashboard with multiple chart types
+- Tabbed navigation for organized content presentation
 
 The architecture prioritizes simplicity and rapid deployment while maintaining good performance through strategic caching and efficient data processing.
