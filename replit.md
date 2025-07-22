@@ -75,6 +75,19 @@ The application is designed for simple deployment on cloud platforms:
 ## Recent Changes
 
 ### Latest Updates (July 22, 2025)
+- **Layout Reorganization**: Improved component positioning for better user experience
+  - Moved "🏆 Current Standings" section directly below header for immediate visibility
+  - Repositioned stage progress information below standings table
+  - Maintained all existing functionality and dark mode styling
+  - Layout now follows: Header → Current Standings → Stage Progress → Analysis tabs
+
+- **Dark Mode Visibility Fixes**: Comprehensive CSS-only styling for all UI elements
+  - Fixed refresh button white background inheritance with multiple CSS targeting layers
+  - Enhanced chart legend visibility with proper white text on dark backgrounds
+  - Corrected Plotly chart axis title styling (fixed titlefont property error)
+  - Applied universal text color overrides for consistent dark mode appearance
+  - Stage legend and analysis descriptions now properly visible
+  - All interactive elements (buttons, tabs, dropdowns) fully readable in dark mode
 - **Stage-by-Stage Performance Charts**: Added comprehensive analytical visualization using Plotly
   - Interactive charts with dark theme integration and participant color coding
   - Cumulative Time Progression: Line charts showing total time evolution across stages
@@ -99,7 +112,7 @@ The application is designed for simple deployment on cloud platforms:
   - Visual stage indicators with colored dots
   - Clear legend for stage status
 - **Data Source**: Successfully connected to user's Google Sheets with 5 participants (Jeremy, Leo, Charles, Aaron, Nate)
-- **Current Status**: App fully functional with real-time data updates, yellow jersey leader styling, sleek dark mode design, comprehensive stage analysis charts, and enhanced analytical user experience
+- **Current Status**: App fully functional with real-time data updates, yellow jersey leader styling, complete dark mode visibility, comprehensive stage analysis charts, and enhanced analytical user experience
 
 ### Working Features
 - Real-time Google Sheets data integration

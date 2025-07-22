@@ -9,9 +9,22 @@ from plotly.subplots import make_subplots
 
 # Page configuration
 st.set_page_config(
-    page_title="Fantasy Tour de France 2025",
+    page_title="Leo Sunshine's Fantasy Tour de France 2025",
     page_icon="🚴",
     layout="wide"
+)
+
+# Inject CSS with a custom background color
+st.markdown(
+    """
+    <style>
+    body {
+            background-color: #1e1e1e;
+            color: #ffffff;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
 )
 
 # Google Sheets CSV export URL - "Replit Stage Data" worksheet
@@ -190,11 +203,18 @@ def create_cumulative_time_chart(stage_data, latest_stage):
             gridcolor='#404040',
             tickmode='linear',
             dtick=1,
-            range=[0.5, latest_stage + 0.5]
+            range=[0.5, latest_stage + 0.5],
+            tickfont=dict(color='#FFFFFF'),
+            title=dict(font=dict(color='#FFFFFF'))
         ),
-        yaxis=dict(gridcolor='#404040'),
+        yaxis=dict(
+            gridcolor='#404040',
+            tickfont=dict(color='#FFFFFF'),
+            title=dict(font=dict(color='#FFFFFF'))
+        ),
         legend=dict(
-            bgcolor='rgba(45, 45, 45, 0.8)',
+            font=dict(color='#FFFFFF', size=14),
+            bgcolor='rgba(45, 45, 45, 0.9)',
             bordercolor='#404040',
             borderwidth=1
         ),
@@ -286,17 +306,27 @@ def create_stage_performance_chart(stage_data, latest_stage):
         height=400
     )
     
-    # Update all subplot axes
+    # Update all subplot axes and annotations
     for i in range(1, min(latest_stage, 5) + 1):
         fig.update_xaxes(
             tickangle=45,
             gridcolor='#404040',
+            tickfont=dict(color='#FFFFFF'),
             row=1, col=i
         )
         fig.update_yaxes(
             gridcolor='#404040',
+            tickfont=dict(color='#FFFFFF'),
             row=1, col=i
         )
+    
+    # Update subplot titles color
+    try:
+        if hasattr(fig, 'layout') and hasattr(fig.layout, 'annotations') and fig.layout.annotations:
+            for annotation in fig.layout.annotations:
+                annotation.font = dict(color='#FFFFFF', size=14)
+    except:
+        pass  # Skip if annotations not available
     
     return fig
 
@@ -366,11 +396,18 @@ def create_gap_evolution_chart(stage_data, latest_stage):
             gridcolor='#404040',
             tickmode='linear',
             dtick=1,
-            range=[0.5, latest_stage + 0.5]
+            range=[0.5, latest_stage + 0.5],
+            tickfont=dict(color='#FFFFFF'),
+            title=dict(font=dict(color='#FFFFFF'))
         ),
-        yaxis=dict(gridcolor='#404040'),
+        yaxis=dict(
+            gridcolor='#404040',
+            tickfont=dict(color='#FFFFFF'),
+            title=dict(font=dict(color='#FFFFFF'))
+        ),
         legend=dict(
-            bgcolor='rgba(45, 45, 45, 0.8)',
+            font=dict(color='#FFFFFF', size=14),
+            bgcolor='rgba(45, 45, 45, 0.9)',
             bordercolor='#404040',
             borderwidth=1
         ),
@@ -388,6 +425,7 @@ def get_dark_theme_css():
         color: #ffffff;
     }
     .stMarkdown {
+        background-color: #1e1e1e;
         color: #ffffff;
     }
     .element-container {
@@ -424,19 +462,202 @@ def get_dark_theme_css():
         color: #ffffff !important;
     }
     .stButton > button {
-        background-color: #404040;
-        color: #ffffff;
-        border: 1px solid #606060;
+        background-color: #404040 !important;
+        color: #ffffff !important;
+        border: 1px solid #606060 !important;
     }
     .stButton > button:hover {
-        background-color: #505050;
-        border: 1px solid #707070;
+        background-color: #505050 !important;
+        border: 1px solid #707070 !important;
+        color: #0000FF !important;
+    }
+    .stButton > button:active {
+        background-color: #606060 !important;
+        color: #ffffff !important;
+    }
+    /* Force button styling with higher specificity */
+    div[data-testid="stButton"] > button {
+        background-color: #404040 !important;
+        color: #ffffff !important;
+        border: 1px solid #606060 !important;
+    }
+    div[data-testid="stButton"] > button:hover {
+        background-color: #505050 !important;
+        color: #0000FF!important;
+    }
+    div[data-testid="stButton"] > button:focus {
+        background-color: #404040 !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 2px #FFD700 !important;
     }
     .stSpinner {
         color: #ffffff !important;
     }
     div[data-testid="stMarkdownContainer"] {
         color: #ffffff;
+    }
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: #2d2d2d !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background-color: #404040 !important;
+        color: #ffffff !important;
+        border: 1px solid #606060 !important;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        background-color: #505050 !important;
+        color: #ffffff !important;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #404040 !important;
+        color: #000000 !important;
+    }
+    /* Selectbox styling */
+    .stSelectbox > div > div {
+        background-color: #404040 !important;
+        color: #ffffff !important;
+        border: 1px solid #606060 !important;
+    }
+    .stSelectbox > div > div > div {
+        color: #ffffff !important;
+    }
+    .stSelectbox [data-baseweb="select"] {
+        background-color: #404040 !important;
+    }
+    .stSelectbox [data-baseweb="select"] > div {
+        background-color: #404040 !important;
+        color: #ffffff !important;
+    }
+    /* Dropdown menu styling */
+    .stSelectbox ul {
+        background-color: #2d2d2d !important;
+        border: 1px solid #606060 !important;
+    }
+    .stSelectbox li {
+        background-color: #2d2d2d !important;
+        color: #ffffff !important;
+    }
+    .stSelectbox li:hover {
+        background-color: #404040 !important;
+        color: #ffffff !important;
+    }
+    /* Info box styling improvements */
+    .stAlert {
+        background-color: #2d2d2d !important;
+        color: #ffffff !important;
+        border: 1px solid #404040 !important;
+    }
+    .stAlert > div {
+        color: #ffffff !important;
+    }
+    /* Text elements */
+    .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
+        color: #ffffff !important;
+    }
+    .stMarkdown p {
+        color: #ffffff !important;
+    }
+    .stMarkdown strong {
+        color: #ffffff !important;
+    }
+    .stMarkdown em {
+        color: #e0e0e0 !important;
+    }
+    /* Additional button overrides to prevent white background inheritance */
+    button[kind="secondary"] {
+        background-color: #404040 !important;
+        color: #ffffff !important;
+        border: 1px solid #606060 !important;
+    }
+    button[kind="secondary"]:hover {
+        background-color: #505050 !important;
+        color: #ffffff !important;
+    }
+    button[data-testid*="button"] {
+        background-color: #404040 !important;
+        color: #ffffff !important;
+        border: 1px solid #606060 !important;
+    }
+    button[data-testid*="button"]:hover {
+        background-color: #505050 !important;
+        color: #ffffff !important;
+    }
+    /* Override any inherited white backgrounds */
+    .stButton button[style*="background"] {
+        background-color: #404040 !important;
+        color: #ffffff !important;
+    }
+    /* Universal button override for all states */
+    button {
+        background-color: #404040 !important;
+        color: #ffffff !important;
+        border: 1px solid #606060 !important;
+    }
+    button:hover {
+        background-color: #505050 !important;
+        color: #ffffff !important;
+    }
+    button:focus {
+        background-color: #404040 !important;
+        color: #ffffff !important;
+        outline: 2px solid #FFD700 !important;
+    }
+    button:active {
+        background-color: #606060 !important;
+        color: #ffffff !important;
+    }
+    /* Specific targeting for refresh button and all Streamlit buttons */
+    .stButton > button,
+    button[data-testid="baseButton-secondary"],
+    button[kind="secondary"],
+    [data-testid="stButton"] button {
+        background-color: #404040 !important;
+        color: #ffffff !important;
+        border: 1px solid #606060 !important;
+    }
+    .stButton > button:hover,
+    button[data-testid="baseButton-secondary"]:hover,
+    button[kind="secondary"]:hover,
+    [data-testid="stButton"] button:hover {
+        background-color: #505050 !important;
+        color: #ffffff !important;
+        border: 1px solid #707070 !important;
+    }
+    /* Additional hover state overrides with maximum specificity */
+    div[data-testid="stButton"] > button:hover,
+    div[data-testid="column"] div[data-testid="stButton"] > button:hover,
+    .stButton button:hover,
+    button[title*="Refresh"]:hover,
+    button[aria-label*="Refresh"]:hover {
+        background-color: #505050 !important;
+        color: #ffffff !important;
+        border: 1px solid #707070 !important;
+        box-shadow: none !important;
+    }
+    /* Force override any inline styles or computed styles */
+    button:hover[style] {
+        background-color: #505050 !important;
+        color: #ffffff !important;
+    }
+    /* Legend and analysis text styling */
+    .legend-text, .analysis-text {
+        color: #ffffff !important;
+        font-weight: bold !important;
+    }
+    .legend-description, .analysis-description {
+        color: #e0e0e0 !important;
+    }
+    /* Universal text color overrides */
+    p, span, div {
+        color: #ffffff !important;
+    }
+    small, .small-text {
+        color: #e0e0e0 !important;
+    }
+    /* Footer text styling */
+    .stMarkdown em, .stMarkdown i, em, i {
+        color: #b0b0b0 !important;
     }
     </style>
     """
@@ -446,7 +667,7 @@ def main():
     st.markdown(get_dark_theme_css(), unsafe_allow_html=True)
     
     # Title and header
-    st.title("🚴 Fantasy Tour de France 2025")
+    st.title("🚴 Leo Sunshine's Fantasy TDF 2025")
     st.markdown("### General Classification Standings")
     
     # Add refresh button
@@ -471,44 +692,7 @@ def main():
     tab1, tab2 = st.tabs(["🏆 Current Standings", "📊 Stage Analysis"])
     
     with tab1:
-        # Display current stage info with progress visualization
-        st.info(f"📊 Current standings after Stage {latest_stage}")
-        
-        # Stage Progress Visualization
-        total_stages = 21
-        progress_percentage = (latest_stage / total_stages) * 100
-        remaining_stages = total_stages - latest_stage
-        
-        # Create progress bar section
-        st.markdown("### 🏁 Tour Progress")
-        col1, col2, col3 = st.columns([2, 1, 1])
-        
-        with col1:
-            st.progress(progress_percentage / 100)
-            st.markdown(f"**Stage {latest_stage} of {total_stages}** ({progress_percentage:.1f}% complete)")
-        
-        with col2:
-            st.metric("Stages Completed", latest_stage, delta=None)
-        
-        with col3:
-            st.metric("Stages Remaining", remaining_stages, delta=None)
-        
-        # Visual stage indicator
-        st.markdown("#### Stage Status")
-        stage_indicators = ""
-        for stage in range(1, total_stages + 1):
-            if stage <= latest_stage:
-                stage_indicators += "🟢 "  # Completed stages
-            elif stage == latest_stage + 1:
-                stage_indicators += "🔴 "  # Next stage
-            else:
-                stage_indicators += "⚪ "  # Future stages
-        
-        st.markdown(f"**Stages 1-21:** {stage_indicators}")
-        st.markdown("🟢 Completed | 🔴 Next | ⚪ Future")
-        
-        # Create standings table
-        st.markdown("---")
+        # Create standings table - moved to top
         st.markdown("### 🏆 Current Standings")
         
         # Custom CSS for Tour de France styling
@@ -588,6 +772,42 @@ def main():
             else:
                 st.metric("Gap to 2nd Place", "N/A")
         
+        # Stage Progress Visualization (moved below standings)
+        st.markdown("---")
+        st.info(f"📊 Current standings after Stage {latest_stage}")
+        
+        total_stages = 21
+        progress_percentage = (latest_stage / total_stages) * 100
+        remaining_stages = total_stages - latest_stage
+        
+        # Create progress bar section
+        st.markdown("### 🏁 Tour Progress")
+        col1, col2, col3 = st.columns([2, 1, 1])
+        
+        with col1:
+            st.progress(progress_percentage / 100)
+            st.markdown(f"**Stage {latest_stage} of {total_stages}** ({progress_percentage:.1f}% complete)")
+        
+        with col2:
+            st.metric("Stages Completed", latest_stage, delta=None)
+        
+        with col3:
+            st.metric("Stages Remaining", remaining_stages, delta=None)
+        
+        # Visual stage indicator
+        st.markdown("#### Stage Status")
+        stage_indicators = ""
+        for stage in range(1, total_stages + 1):
+            if stage <= latest_stage:
+                stage_indicators += "🟢 "  # Completed stages
+            elif stage == latest_stage + 1:
+                stage_indicators += "🔴 "  # Next stage
+            else:
+                stage_indicators += "⚪ "  # Future stages
+        
+        st.markdown(f'<p class="legend-text" style="color: #ffffff !important; font-weight: bold;">Stages 1-21:</p><p style="color: #ffffff !important; font-size: 18px;">{stage_indicators}</p>', unsafe_allow_html=True)
+        st.markdown('<p class="legend-description" style="color: #e0e0e0 !important; font-size: 14px;">🟢 Completed | 🔴 Next | ⚪ Future</p>', unsafe_allow_html=True)
+        
         # Footer
         st.markdown("---")
         st.markdown(f"*Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Data refreshes every 5 minutes*")
@@ -613,25 +833,25 @@ def main():
                     create_cumulative_time_chart(stage_by_stage_data, latest_stage),
                     use_container_width=True
                 )
-                st.markdown("**Analysis:** Shows each participant's total cumulative time progression across all completed stages.")
+                st.markdown('<p class="analysis-text" style="color: #ffffff !important; font-weight: bold;">Analysis:</p><p class="analysis-description" style="color: #e0e0e0 !important;">Shows each participant\'s total cumulative time progression across all completed stages.</p>', unsafe_allow_html=True)
                 
             elif chart_option == "⚡ Individual Stage Performance":
                 st.plotly_chart(
                     create_stage_performance_chart(stage_by_stage_data, latest_stage),
                     use_container_width=True
                 )
-                st.markdown("**Analysis:** Displays individual stage times to identify stage winners and performance patterns.")
+                st.markdown('<p class="analysis-text" style="color: #ffffff !important; font-weight: bold;">Analysis:</p><p class="analysis-description" style="color: #e0e0e0 !important;">Displays individual stage times to identify stage winners and performance patterns.</p>', unsafe_allow_html=True)
                 
             elif chart_option == "📈 Gap Evolution from Leader":
                 st.plotly_chart(
                     create_gap_evolution_chart(stage_by_stage_data, latest_stage),
                     use_container_width=True
                 )
-                st.markdown("**Analysis:** Tracks how time gaps between participants and the leader evolve over stages.")
+                st.markdown('<p class="analysis-text" style="color: #ffffff !important; font-weight: bold;">Analysis:</p><p class="analysis-description" style="color: #e0e0e0 !important;">Tracks how time gaps between participants and the leader evolve over stages.</p>', unsafe_allow_html=True)
         
         else:
             st.info("📊 Stage analysis will be available once multiple stages are completed.")
-            st.markdown("Current stage data is insufficient for detailed analysis. Charts will appear as more stage data becomes available.")
+            st.markdown('<p style="color: #e0e0e0;">Current stage data is insufficient for detailed analysis. Charts will appear as more stage data becomes available.</p>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
