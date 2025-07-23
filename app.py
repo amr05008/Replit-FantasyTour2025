@@ -62,6 +62,7 @@ st.markdown("""
     <meta name="author" content="Aaron Roy" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#1e1e1e" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     
     <!-- Favicon and Apple Touch Icons -->
     <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚴</text></svg>" />
@@ -345,38 +346,44 @@ def create_cumulative_time_chart(stage_data, latest_stage):
                     text=hover_text
                 ))
     
-    # Dark theme styling
+    # Dark theme styling with mobile responsiveness
     fig.update_layout(
         title={
             'text': 'Cumulative Time Progression by Stage',
             'x': 0.5,
-            'font': {'size': 20, 'color': '#FFFFFF'}
+            'font': {'size': 18, 'color': '#FFFFFF'}
         },
         xaxis_title='Stage',
         yaxis_title='Cumulative Time (Hours)',
         plot_bgcolor='#1e1e1e',
         paper_bgcolor='#1e1e1e',
-        font=dict(color='#FFFFFF'),
+        font=dict(color='#FFFFFF', size=12),
         xaxis=dict(
             gridcolor='#404040',
             tickmode='linear',
             dtick=1,
             range=[0.5, latest_stage + 0.5],
-            tickfont=dict(color='#FFFFFF'),
-            title=dict(font=dict(color='#FFFFFF'))
+            tickfont=dict(color='#FFFFFF', size=10),
+            title=dict(font=dict(color='#FFFFFF', size=12))
         ),
         yaxis=dict(
             gridcolor='#404040',
-            tickfont=dict(color='#FFFFFF'),
-            title=dict(font=dict(color='#FFFFFF'))
+            tickfont=dict(color='#FFFFFF', size=10),
+            title=dict(font=dict(color='#FFFFFF', size=12))
         ),
         legend=dict(
-            font=dict(color='#FFFFFF', size=14),
+            font=dict(color='#FFFFFF', size=12),
             bgcolor='rgba(45, 45, 45, 0.9)',
             bordercolor='#404040',
-            borderwidth=1
+            borderwidth=1,
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="center",
+            x=0.5
         ),
-        margin=dict(l=0, r=0, t=50, b=0)
+        margin=dict(l=40, r=40, t=80, b=40),
+        height=350
     )
     
     return fig
@@ -455,13 +462,13 @@ def create_stage_performance_chart(stage_data, latest_stage):
         title={
             'text': 'Individual Stage Performance (Minutes)',
             'x': 0.5,
-            'font': {'size': 20, 'color': '#FFFFFF'}
+            'font': {'size': 16, 'color': '#FFFFFF'}
         },
         plot_bgcolor='#1e1e1e',
         paper_bgcolor='#1e1e1e',
-        font=dict(color='#FFFFFF'),
-        margin=dict(l=0, r=0, t=80, b=0),
-        height=400
+        font=dict(color='#FFFFFF', size=11),
+        margin=dict(l=30, r=30, t=70, b=30),
+        height=350
     )
     
     # Update all subplot axes and annotations
@@ -548,38 +555,44 @@ def create_gap_evolution_chart(stage_data, latest_stage):
                     text=hover_text
                 ))
     
-    # Dark theme styling
+    # Dark theme styling with mobile responsiveness
     fig.update_layout(
         title={
             'text': 'Time Gap Evolution (Minutes Behind Leader)',
             'x': 0.5,
-            'font': {'size': 20, 'color': '#FFFFFF'}
+            'font': {'size': 16, 'color': '#FFFFFF'}
         },
         xaxis_title='Stage',
         yaxis_title='Gap to Leader (Minutes)',
         plot_bgcolor='#1e1e1e',
         paper_bgcolor='#1e1e1e',
-        font=dict(color='#FFFFFF'),
+        font=dict(color='#FFFFFF', size=11),
         xaxis=dict(
             gridcolor='#404040',
             tickmode='linear',
             dtick=1,
             range=[0.5, latest_stage + 0.5],
-            tickfont=dict(color='#FFFFFF'),
-            title=dict(font=dict(color='#FFFFFF'))
+            tickfont=dict(color='#FFFFFF', size=10),
+            title=dict(font=dict(color='#FFFFFF', size=12))
         ),
         yaxis=dict(
             gridcolor='#404040',
-            tickfont=dict(color='#FFFFFF'),
-            title=dict(font=dict(color='#FFFFFF'))
+            tickfont=dict(color='#FFFFFF', size=10),
+            title=dict(font=dict(color='#FFFFFF', size=12))
         ),
         legend=dict(
-            font=dict(color='#FFFFFF', size=14),
+            font=dict(color='#FFFFFF', size=12),
             bgcolor='rgba(45, 45, 45, 0.9)',
             bordercolor='#404040',
-            borderwidth=1
+            borderwidth=1,
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="center",
+            x=0.5
         ),
-        margin=dict(l=0, r=0, t=50, b=0)
+        margin=dict(l=40, r=40, t=70, b=40),
+        height=350
     )
     
     return fig
@@ -602,84 +615,161 @@ def create_riders_display(team_rosters):
     st.markdown("### 👥 Team Rosters")
     st.markdown("Current riders for each fantasy team in the Tour de France 2025")
     
-    # Create columns for team display
-    cols = st.columns(len(team_rosters))
+    # Create responsive team display - stack on mobile
+    # For mobile: show one team per row, for desktop: show multiple columns
+    teams_list = list(team_rosters.items())
     
-    for idx, (team_owner, riders) in enumerate(team_rosters.items()):
-        with cols[idx]:
-            # Get team color
-            color = team_colors.get(team_owner, '#333333')
+    # Use responsive columns that work better on mobile
+    if len(teams_list) <= 2:
+        cols = st.columns(len(teams_list))
+        display_teams = [teams_list]
+    else:
+        # Split teams into rows of 2-3 for mobile compatibility
+        cols1 = st.columns(2)
+        cols2 = st.columns(2) if len(teams_list) > 2 else None
+        cols3 = st.columns(1) if len(teams_list) == 5 else None
+        
+        display_teams = [teams_list[:2]]
+        if len(teams_list) > 2:
+            display_teams.append(teams_list[2:4])
+        if len(teams_list) == 5:
+            display_teams.append([teams_list[4]])
+    
+    team_idx = 0
+    for row_teams in display_teams:
+        if len(row_teams) == 1:
+            cols = st.columns(1)
+        else:
+            cols = st.columns(len(row_teams))
             
-            # Create team card with proper HTML escaping
-            riders_list = []
-            for i, rider in enumerate(riders, 1):
-                riders_list.append(f"{i}. {rider}")
-            
-            # Display team header
-            st.markdown(f"### 🚴 {team_owner}")
-            st.markdown(f"<div style='color: {color}; font-weight: bold; margin-bottom: 10px;'>{len(riders)} Riders</div>", unsafe_allow_html=True)
-            
-            # Display riders as a simple list
-            if riders:
-                for i, rider in enumerate(riders, 1):
-                    st.write(f"{i}. {rider}")
-            else:
-                st.write("No riders assigned")
-            
-            st.markdown("---")
+        for col_idx, (team_owner, riders) in enumerate(row_teams):
+            with cols[col_idx]:
+                # Get team color
+                color = team_colors.get(team_owner, '#333333')
+                
+                # Display team header
+                st.markdown(f"### 🚴 {team_owner}")
+                st.markdown(f"<div style='color: {color}; font-weight: bold; margin-bottom: 10px;'>{len(riders)} Riders</div>", unsafe_allow_html=True)
+                
+                # Display riders as a simple list
+                if riders:
+                    for i, rider in enumerate(riders, 1):
+                        st.write(f"{i}. {rider}")
+                else:
+                    st.write("No riders assigned")
+                
+                st.markdown("---")
     
     # Add summary statistics
     st.markdown("---")
     
-    # Create summary row
+    # Create responsive summary row
     total_riders = sum(len(riders) for riders in team_rosters.values())
     avg_riders = total_riders / len(team_rosters) if team_rosters else 0
     
-    col1, col2, col3 = st.columns(3)
+    # Use 2 columns for mobile, 3 for desktop
+    col1, col2 = st.columns(2)
     with col1:
         st.metric("Total Riders", total_riders)
     with col2:
-        st.metric("Average per Team", f"{avg_riders:.1f}")
-    with col3:
         st.metric("Teams", len(team_rosters))
+    
+    # Average on its own row for mobile readability
+    st.metric("Average per Team", f"{avg_riders:.1f}")
 
 def get_dark_theme_css():
-    """Return dark theme CSS"""
+    """Return dark theme CSS with animated transitions"""
     return """
     <style>
+    /* Global animations and transitions */
+    * {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
     .stApp {
         background-color: #1e1e1e;
         color: #ffffff;
+        transition: background-color 0.3s ease;
     }
     .stMarkdown {
         background-color: #1e1e1e;
         color: #ffffff;
+        transition: opacity 0.3s ease, transform 0.3s ease;
     }
     .element-container {
         background-color: #1e1e1e;
+        transition: all 0.3s ease;
     }
+    
+    /* Animated cards with hover effects */
     .dark-card {
         background-color: #2d2d2d !important;
         border: 2px solid #404040 !important;
         color: #ffffff !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(0);
     }
+    .dark-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important;
+        border-color: #606060 !important;
+    }
+    
     .dark-leader-card {
         background-color: #FFD700 !important;
         color: #000000 !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(0);
+        animation: leaderGlow 2s ease-in-out infinite alternate;
+    }
+    .dark-leader-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(255, 215, 0, 0.4) !important;
+    }
+    
+    /* Leader glow animation */
+    @keyframes leaderGlow {
+        from {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        to {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 0 30px rgba(255, 215, 0, 0.5);
+        }
     }
     .stMetric {
         background-color: #2d2d2d;
         border-radius: 8px;
         padding: 15px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(0);
+    }
+    .stMetric:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        background-color: #353535;
     }
     .stMetric > div {
         color: #ffffff;
+        transition: color 0.3s ease;
     }
     .stProgress > div > div > div > div {
         background-color: #404040;
+        transition: all 0.3s ease;
     }
     .stProgress > div > div > div > div > div {
         background-color: #FFD700 !important;
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: progressPulse 1.5s ease-in-out infinite alternate;
+    }
+    
+    /* Progress bar animation */
+    @keyframes progressPulse {
+        from {
+            box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+        }
+        to {
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        }
     }
     .stInfo {
         background-color: #2d2d2d !important;
@@ -692,15 +782,21 @@ def get_dark_theme_css():
         background-color: #404040 !important;
         color: #ffffff !important;
         border: 1px solid #606060 !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(0);
     }
     .stButton > button:hover {
         background-color: #505050 !important;
         border: 1px solid #707070 !important;
-        color: #0000FF !important;
+        color: #ffffff !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
     .stButton > button:active {
         background-color: #606060 !important;
         color: #ffffff !important;
+        transform: translateY(0);
+        transition: all 0.1s ease;
     }
     /* Force button styling with higher specificity */
     div[data-testid="stButton"] > button {
@@ -723,51 +819,98 @@ def get_dark_theme_css():
     div[data-testid="stMarkdownContainer"] {
         color: #ffffff;
     }
-    /* Tab styling */
+    /* Animated Tab styling */
     .stTabs [data-baseweb="tab-list"] {
         background-color: #2d2d2d !important;
+        transition: all 0.3s ease;
     }
     .stTabs [data-baseweb="tab"] {
         background-color: #404040 !important;
         color: #ffffff !important;
         border: 1px solid #606060 !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(0);
+        position: relative;
+        overflow: hidden;
     }
     .stTabs [data-baseweb="tab"]:hover {
         background-color: #505050 !important;
         color: #ffffff !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
     .stTabs [aria-selected="true"] {
-        background-color: #404040 !important;
+        background-color: #FFD700 !important;
         color: #000000 !important;
+        border: 1px solid #FFD700 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+        animation: activeTabGlow 1s ease-in-out infinite alternate;
     }
-    /* Selectbox styling */
+    
+    /* Active tab glow animation */
+    @keyframes activeTabGlow {
+        from {
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+        }
+        to {
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.5);
+        }
+    }
+    /* Animated Selectbox styling */
     .stSelectbox > div > div {
         background-color: #404040 !important;
         color: #ffffff !important;
         border: 1px solid #606060 !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(0);
+    }
+    .stSelectbox > div > div:hover {
+        border-color: #707070 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        transform: translateY(-1px);
     }
     .stSelectbox > div > div > div {
         color: #ffffff !important;
+        transition: color 0.3s ease;
     }
     .stSelectbox [data-baseweb="select"] {
         background-color: #404040 !important;
+        transition: all 0.3s ease;
     }
     .stSelectbox [data-baseweb="select"] > div {
         background-color: #404040 !important;
         color: #ffffff !important;
+        transition: all 0.3s ease;
     }
-    /* Dropdown menu styling */
+    /* Animated Dropdown menu styling */
     .stSelectbox ul {
         background-color: #2d2d2d !important;
         border: 1px solid #606060 !important;
+        animation: dropdownSlide 0.2s ease-out;
+        transform-origin: top;
     }
     .stSelectbox li {
         background-color: #2d2d2d !important;
         color: #ffffff !important;
+        transition: all 0.2s ease;
     }
     .stSelectbox li:hover {
         background-color: #404040 !important;
         color: #ffffff !important;
+        transform: translateX(4px);
+    }
+    
+    /* Dropdown slide animation */
+    @keyframes dropdownSlide {
+        from {
+            opacity: 0;
+            transform: scaleY(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scaleY(1);
+        }
     }
     /* Info box styling improvements */
     .stAlert {
@@ -886,6 +1029,216 @@ def get_dark_theme_css():
     .stMarkdown em, .stMarkdown i, em, i {
         color: #b0b0b0 !important;
     }
+    
+    /* Content fade-in animations */
+    .stContainer {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    /* Spinner animation improvements */
+    .stSpinner > div {
+        animation: spinnerBounce 1.2s ease-in-out infinite;
+    }
+    
+    /* Chart container animations */
+    .stPlotlyChart {
+        animation: chartFadeIn 0.8s ease-out;
+    }
+    
+    /* Content animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes chartFadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    @keyframes spinnerBounce {
+        0%, 20%, 53%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40%, 43% {
+            transform: translateY(-8px);
+        }
+        70% {
+            transform: translateY(-4px);
+        }
+        90% {
+            transform: translateY(-2px);
+        }
+    }
+    
+    /* Smooth scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    /* Hover zoom effect for stage indicators */
+    .stage-indicator {
+        display: inline-block;
+        transition: transform 0.2s ease;
+    }
+    .stage-indicator:hover {
+        transform: scale(1.2);
+    }
+    
+    /* Mobile Responsive Design */
+    @media (max-width: 768px) {
+        /* Mobile layout adjustments */
+        .main .block-container {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            max-width: 100% !important;
+        }
+        
+        /* Mobile typography */
+        h1 {
+            font-size: 1.8rem !important;
+            text-align: center !important;
+        }
+        
+        h2, h3 {
+            font-size: 1.3rem !important;
+        }
+        
+        /* Mobile cards */
+        .dark-card, .dark-leader-card {
+            margin: 4px 0 !important;
+            padding: 12px !important;
+            font-size: 14px !important;
+        }
+        
+        .dark-leader-card span {
+            font-size: 18px !important;
+        }
+        
+        .dark-card span {
+            font-size: 16px !important;
+        }
+        
+        /* Mobile metrics - stack vertically */
+        .stMetric {
+            margin-bottom: 1rem !important;
+            text-align: center !important;
+        }
+        
+        /* Mobile tabs */
+        .stTabs [data-baseweb="tab"] {
+            font-size: 12px !important;
+            padding: 8px 12px !important;
+            min-height: 44px !important;
+        }
+        
+        /* Mobile buttons - larger touch targets */
+        .stButton > button {
+            min-height: 44px !important;
+            font-size: 14px !important;
+            padding: 12px 16px !important;
+        }
+        
+        /* Mobile selectbox */
+        .stSelectbox > div > div {
+            min-height: 44px !important;
+            font-size: 14px !important;
+        }
+        
+        /* Mobile stage indicators - wrap and space better */
+        .stage-indicator {
+            font-size: 20px !important;
+            margin: 2px !important;
+        }
+        
+        /* Mobile progress bar */
+        .stProgress {
+            height: 12px !important;
+        }
+        
+        /* Mobile charts */
+        .stPlotlyChart {
+            height: 300px !important;
+        }
+        
+        /* Hide hover effects on mobile */
+        .dark-card:hover,
+        .dark-leader-card:hover,
+        .stMetric:hover,
+        .stage-indicator:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* Mobile column adjustments */
+        .row-widget.stHorizontal > div {
+            flex: 1 1 100% !important;
+            margin-bottom: 0.5rem !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        /* Extra small mobile devices */
+        h1 {
+            font-size: 1.5rem !important;
+        }
+        
+        .dark-card, .dark-leader-card {
+            padding: 10px !important;
+            font-size: 12px !important;
+        }
+        
+        .dark-leader-card span {
+            font-size: 16px !important;
+        }
+        
+        .dark-card span {
+            font-size: 14px !important;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+            font-size: 10px !important;
+            padding: 6px 8px !important;
+        }
+        
+        .stage-indicator {
+            font-size: 16px !important;
+        }
+        
+        .stPlotlyChart {
+            height: 250px !important;
+        }
+    }
+    
+    /* Touch-friendly interactions */
+    @media (pointer: coarse) {
+        .stButton > button,
+        .stSelectbox > div > div,
+        .stTabs [data-baseweb="tab"] {
+            min-height: 44px !important;
+        }
+        
+        /* Disable hover animations on touch devices */
+        .dark-card:hover,
+        .dark-leader-card:hover,
+        .stMetric:hover,
+        .stButton > button:hover,
+        .stage-indicator:hover {
+            transform: none !important;
+        }
+    }
     </style>
     """
 
@@ -897,10 +1250,10 @@ def main():
     st.title("🚴 Leo Sunshine's Fantasy TDF 2025")
     st.markdown("### General Classification Standings")
     
-    # Add refresh button
-    col1, col2 = st.columns([6, 1])
+    # Add refresh button with mobile-friendly layout
+    col1, col2 = st.columns([4, 1])
     with col2:
-        if st.button("🔄 Refresh", help="Refresh data from Google Sheets"):
+        if st.button("🔄 Refresh", help="Refresh data from Google Sheets", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
     
@@ -982,9 +1335,10 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
         
-        # Additional information
+        # Additional information with mobile-responsive layout
         st.markdown("---")
-        col1, col2, col3 = st.columns(3)
+        # Use different column layouts for mobile vs desktop
+        col1, col2, col3 = st.columns([1, 1, 1])
         
         with col1:
             total_participants = len(sorted_participants)
@@ -1009,32 +1363,34 @@ def main():
         progress_percentage = (latest_stage / total_stages) * 100
         remaining_stages = total_stages - latest_stage
         
-        # Create progress bar section
+        # Create progress bar section with mobile layout
         st.markdown("### 🏁 Tour Progress")
-        col1, col2, col3 = st.columns([2, 1, 1])
+        
+        # Progress bar takes full width on mobile
+        st.progress(progress_percentage / 100)
+        st.markdown(f"**Stage {latest_stage} of {total_stages}** ({progress_percentage:.1f}% complete)")
+        
+        # Metrics in responsive columns
+        col1, col2 = st.columns(2)
         
         with col1:
-            st.progress(progress_percentage / 100)
-            st.markdown(f"**Stage {latest_stage} of {total_stages}** ({progress_percentage:.1f}% complete)")
-        
-        with col2:
             st.metric("Stages Completed", latest_stage, delta=None)
         
-        with col3:
+        with col2:
             st.metric("Stages Remaining", remaining_stages, delta=None)
         
-        # Visual stage indicator
+        # Visual stage indicator with mobile-friendly wrapping
         st.markdown("#### Stage Status")
         stage_indicators = ""
         for stage in range(1, total_stages + 1):
             if stage <= latest_stage:
-                stage_indicators += "🟢 "  # Completed stages
+                stage_indicators += '<span class="stage-indicator">🟢</span> '  # Completed stages
             elif stage == latest_stage + 1:
-                stage_indicators += "🔴 "  # Next stage
+                stage_indicators += '<span class="stage-indicator">🔴</span> '  # Next stage
             else:
-                stage_indicators += "⚪ "  # Future stages
+                stage_indicators += '<span class="stage-indicator">⚪</span> '  # Future stages
         
-        st.markdown(f'<p class="legend-text" style="color: #ffffff !important; font-weight: bold;">Stages 1-21:</p><p style="color: #ffffff !important; font-size: 18px;">{stage_indicators}</p>', unsafe_allow_html=True)
+        st.markdown(f'<p class="legend-text" style="color: #ffffff !important; font-weight: bold;">Stages 1-21:</p><div style="color: #ffffff !important; font-size: 18px; line-height: 1.5; word-wrap: break-word;">{stage_indicators}</div>', unsafe_allow_html=True)
         st.markdown('<p class="legend-description" style="color: #e0e0e0 !important; font-size: 14px;">🟢 Completed | 🔴 Next | ⚪ Future</p>', unsafe_allow_html=True)
         
         # Footer
