@@ -74,6 +74,21 @@ The application is designed for simple deployment on cloud platforms:
 
 ## Recent Changes
 
+### Competition Winner Display Feature (July 30, 2025)
+*Note: Tour de France 2025 completed on July 27, 2025*
+- **Configuration-Based Toggle System**: Added `COMPETITION_CONFIG` dictionary for easy competition status control
+  - Simple boolean toggles for `is_complete`, `show_celebration`, and `winner_name` configuration
+  - Dynamic title modification to show "COMPLETE ✅" status
+  - Reusable system that can be easily toggled for future competitions
+- **Winner Celebration Components**: Implemented animated celebration banner and status cards
+  - Gold gradient celebration banner with pulsing animations and confetti effects
+  - Completion status card showing final results and champion information
+  - Dynamic leader labeling (LEADER vs 🏆 CHAMPION) based on competition status
+  - Enhanced leader display with context-aware styling and labels
+- **Future Competition Compatibility**: Designed for easy reuse across different cycling competitions
+  - Configuration can be modified for Tour de France 2026 or other cycling events
+  - Simple toggle system allows instant switching between active and completed states
+
 ### Latest UI/UX Improvements (July 30, 2025)
 - **Animated Transitions**: Implemented smooth CSS animations throughout the application
   - Card hover effects with subtle elevation changes and shadow improvements

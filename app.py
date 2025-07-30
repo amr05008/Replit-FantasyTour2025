@@ -82,6 +82,19 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# ====================
+# COMPETITION CONFIGURATION
+# ====================
+# Toggle these settings to control winner display and completion status
+COMPETITION_CONFIG = {
+    "is_complete": True,  # Set to True when competition is finished
+    "winner_name": "Aaron",  # Name of the competition winner
+    "competition_name": "Tour de France 2025",
+    "total_stages": 21,
+    "completion_date": "July 27, 2025",
+    "show_celebration": True  # Show celebration banner and styling
+}
+
 # Google Sheets CSV export URLs
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1_dYs_80Xdi39_-vtZYxt6l4Mj_0jFuHSf4p79zcBI4M/export?format=csv&gid=0"
 RIDERS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1_dYs_80Xdi39_-vtZYxt6l4Mj_0jFuHSf4p79zcBI4M/export?format=csv&gid=667768222"
@@ -114,6 +127,135 @@ def calculate_time_gap(leader_time, participant_time):
     if gap_seconds == 0:
         return "Leader"
     return f"+{seconds_to_time_str(gap_seconds)}"
+
+def create_winner_banner():
+    """Create a celebration banner for the competition winner"""
+    if not COMPETITION_CONFIG["is_complete"] or not COMPETITION_CONFIG["show_celebration"]:
+        return
+    
+    winner = COMPETITION_CONFIG["winner_name"]
+    competition = COMPETITION_CONFIG["competition_name"]
+    completion_date = COMPETITION_CONFIG["completion_date"]
+    
+    st.markdown(f"""
+    <div style="
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        padding: 20px;
+        border-radius: 15px;
+        margin: 20px 0;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(255, 215, 0, 0.3);
+        animation: celebrationPulse 2s ease-in-out infinite alternate;
+        border: 3px solid #FF8C00;
+    ">
+        <h1 style="
+            color: #000000;
+            font-size: 2.5em;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: bounce 1s ease-in-out infinite;
+        ">
+            🏆 {winner} WINS! 🏆
+        </h1>
+        <h3 style="
+            color: #8B4513;
+            margin: 10px 0;
+            font-weight: bold;
+        ">
+            🚴 {competition} Champion! 🚴
+        </h3>
+        <p style="
+            color: #000000;
+            font-size: 1.2em;
+            margin: 5px 0;
+            font-weight: 600;
+        ">
+            Competition completed on {completion_date}
+        </p>
+        <div style="
+            font-size: 2em;
+            margin: 10px 0;
+            animation: confetti 3s ease-in-out infinite;
+        ">
+            🎉 🎊 🥳 🎈 🎉
+        </div>
+    </div>
+    
+    <style>
+    @keyframes celebrationPulse {{
+        from {{
+            transform: scale(1);
+            box-shadow: 0 8px 32px rgba(255, 215, 0, 0.3);
+        }}
+        to {{
+            transform: scale(1.02);
+            box-shadow: 0 12px 40px rgba(255, 215, 0, 0.5);
+        }}
+    }}
+    
+    @keyframes bounce {{
+        0%, 20%, 50%, 80%, 100% {{
+            transform: translateY(0);
+        }}
+        40% {{
+            transform: translateY(-10px);
+        }}
+        60% {{
+            transform: translateY(-5px);
+        }}
+    }}
+    
+    @keyframes confetti {{
+        0%, 100% {{
+            transform: rotate(0deg);
+        }}
+        25% {{
+            transform: rotate(5deg);
+        }}
+        75% {{
+            transform: rotate(-5deg);
+        }}
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+def get_competition_title():
+    """Get the appropriate title based on competition status"""
+    base_title = "🚴 Sunshine's Fantasy TDF 2025"
+    
+    if COMPETITION_CONFIG["is_complete"]:
+        return f"{base_title} - COMPLETE ✅"
+    else:
+        return base_title
+
+def create_completion_status_card():
+    """Create a status card showing competition completion"""
+    if not COMPETITION_CONFIG["is_complete"]:
+        return
+    
+    winner = COMPETITION_CONFIG["winner_name"]
+    total_stages = COMPETITION_CONFIG["total_stages"]
+    completion_date = COMPETITION_CONFIG["completion_date"]
+    
+    st.markdown(f"""
+    <div style="
+        background-color: #2d2d2d;
+        border: 2px solid #FFD700;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 15px 0;
+        text-align: center;
+    ">
+        <h4 style="color: #FFD700; margin: 5px 0;">📊 Final Results</h4>
+        <p style="color: #ffffff; margin: 5px 0;">
+            All {total_stages} stages completed on {completion_date}
+        </p>
+        <p style="color: #FFD700; font-weight: bold; font-size: 1.1em; margin: 5px 0;">
+            🏆 Champion: {winner}
+        </p>
+        <small style="color: #cccccc;">These are the final standings</small>
+    </div>
+    """, unsafe_allow_html=True)
 
 def generate_share_content(data):
     """Generate dynamic content for social sharing based on current standings"""
@@ -488,18 +630,20 @@ def create_stage_performance_chart(stage_data, latest_stage):
     # Update subplot titles color - use layout update method
     try:
         # Update annotations via layout update to avoid direct access issues
-        fig.update_layout(
-            annotations=[
-                dict(
-                    text=annotation.text if hasattr(annotation, 'text') else '',
-                    x=annotation.x if hasattr(annotation, 'x') else 0.5,
-                    y=annotation.y if hasattr(annotation, 'y') else 1,
-                    xref=annotation.xref if hasattr(annotation, 'xref') else 'paper',
-                    yref=annotation.yref if hasattr(annotation, 'yref') else 'paper',
-                    font=dict(color='#FFFFFF', size=14)
-                ) for annotation in (fig.layout.annotations or [])
-            ]
-        )
+        current_annotations = getattr(fig.layout, 'annotations', None)
+        if current_annotations:
+            fig.update_layout(
+                annotations=[
+                    dict(
+                        text=getattr(annotation, 'text', ''),
+                        x=getattr(annotation, 'x', 0.5),
+                        y=getattr(annotation, 'y', 1),
+                        xref=getattr(annotation, 'xref', 'paper'),
+                        yref=getattr(annotation, 'yref', 'paper'),
+                        font=dict(color='#FFFFFF', size=14)
+                    ) for annotation in current_annotations
+                ]
+            )
     except Exception:
         pass  # Skip if annotations not available
     
@@ -1246,9 +1390,20 @@ def main():
     # Apply dark theme CSS
     st.markdown(get_dark_theme_css(), unsafe_allow_html=True)
     
-    # Title and header
-    st.title("🚴 Sunshine's Fantasy TDF 2025")
-    st.markdown("### General Classification Standings")
+    # Display winner banner if competition is complete
+    create_winner_banner()
+    
+    # Title and header (dynamic based on completion status)
+    st.title(get_competition_title())
+    
+    # Display completion status card if competition is complete
+    create_completion_status_card()
+    
+    # Subtitle
+    if COMPETITION_CONFIG["is_complete"]:
+        st.markdown("### 🏁 Final Standings")
+    else:
+        st.markdown("### General Classification Standings")
     
     # Add refresh button with mobile-friendly layout
     col1, col2 = st.columns([4, 1])
@@ -1301,6 +1456,8 @@ def main():
             
             # Apply yellow background for leader
             if position == 1:
+                # Dynamic label based on competition status
+                leader_label = "🏆 CHAMPION" if COMPETITION_CONFIG["is_complete"] else "👑 LEADER"
                 container = st.container()
                 with container:
                     st.markdown(f"""
@@ -1308,7 +1465,7 @@ def main():
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span style="font-size: 24px; font-weight: bold; color: #000000;">🥇 {position}. {participant}</span>
                             <span style="font-size: 20px; font-weight: bold; color: #000000;">{time_str}</span>
-                            <span style="font-size: 18px; color: #B8860B; font-weight: bold;">👑 LEADER</span>
+                            <span style="font-size: 18px; color: #B8860B; font-weight: bold;">{leader_label}</span>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -1346,7 +1503,8 @@ def main():
         
         with col2:
             leader_name = sorted_participants[0][0]
-            st.metric("Current Leader", leader_name)
+            leader_title = "Champion" if COMPETITION_CONFIG["is_complete"] else "Current Leader"
+            st.metric(leader_title, leader_name)
         
         with col3:
             if len(sorted_participants) > 1:
