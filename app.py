@@ -9,15 +9,15 @@ from plotly.subplots import make_subplots
 
 # Page configuration
 st.set_page_config(
-    page_title="Leo Sunshine's Fantasy Tour de France 2025",
+    page_title="Sunshine Fantasy Tour de France 2025",
     page_icon="🚴",
     layout="wide"
 )
 
 # Enhanced Meta Tags for URL Sharing (Open Graph, Twitter Cards, Schema.org)
 st.markdown("""
-    <meta property="og:title" content="Leo Sunshine's Fantasy Tour de France 2025 - Live Results" />
-    <meta property="og:description" content="Leo Sunshine Fantasy League Companion App" />
+    <meta property="og:title" content="Sunshine Fantasy Tour de France 2025 - Live Results" />
+    <meta property="og:description" content="Sunshine Fantasy Tour de France 2025" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://tdf2025.replit.app/" />
     <meta property="og:image" content="attached_assets/ChatGPT Image Jul 22, 2025, 02_24_08 PM_1753208677017.png" />
@@ -28,8 +28,8 @@ st.markdown("""
     
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Leo Sunshine's Fantasy Tour de France 2025 - Live Results" />
-    <meta name="twitter:description" content="Leo Sunshine Fantasy League Companion App" />
+    <meta name="twitter:title" content="Sunshine Fantasy Tour de France 2025" />
+    <meta name="twitter:description" content="Sunshine Fantasy Tour de France 2025" />
     <meta name="twitter:image" content="attached_assets/ChatGPT Image Jul 22, 2025, 02_24_08 PM_1753208677017.png" />
     
     <!-- Schema.org Structured Data -->
@@ -37,8 +37,8 @@ st.markdown("""
     {
         "@context": "https://schema.org",
         "@type": "WebApplication",
-        "name": "Leo Sunshine's Fantasy Tour de France 2025",
-        "description": "Leo Sunshine Fantasy League Companion App",
+        "name": "Sunshine Fantasy Tour de France 2025",
+        "description": "Sunshine Fantasy Tour de France 2025",
         "url": "https://tdf2025.replit.app/",
         "applicationCategory": "SportsApplication",
         "operatingSystem": "Web Browser",
@@ -119,7 +119,7 @@ def generate_share_content(data):
     """Generate dynamic content for social sharing based on current standings"""
     if data is None or len(data) == 0:
         return {
-            'title': "Leo Sunshine's Fantasy Tour de France 2025",
+            'title': "Fantasy Tour de France 2025",
             'description': "Track real-time Fantasy Tour de France results with interactive standings and stage analysis!"
         }
     
@@ -132,9 +132,9 @@ def generate_share_content(data):
         current_stage = 1  # You might want to calculate this from your data
         
         title = f"🚴 {leader_name} leads Fantasy Tour de France!"
-        description = f"Stage {current_stage}/{total_stages} complete. Follow live standings, stage analysis, and team rosters in Leo's Fantasy Tour!"
+        description = f"Stage {current_stage}/{total_stages} complete. Follow live standings, stage analysis, and team rosters in Sunshine's Fantasy Tour!"
     else:
-        title = "Leo Sunshine's Fantasy Tour de France 2025"
+        title = "Sunshine Fantasy Tour de France 2025"
         description = "Track real-time Fantasy Tour de France results with interactive standings, stage analysis, and team rosters!"
     
     return {
@@ -151,7 +151,7 @@ def create_sharing_buttons():
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        twitter_url = f"https://twitter.com/intent/tweet?url={current_url}&text=Check out Leo's Fantasy Tour de France 2025 results! 🚴⚡"
+        twitter_url = f"https://twitter.com/intent/tweet?url={current_url}&text=Check out Fantasy Tour de France 2025 results! 🚴⚡"
         st.markdown(f"[🐦 Tweet]({twitter_url})", unsafe_allow_html=True)
     
     with col2:
@@ -1247,7 +1247,7 @@ def main():
     st.markdown(get_dark_theme_css(), unsafe_allow_html=True)
     
     # Title and header
-    st.title("🚴 Leo Sunshine's Fantasy TDF 2025")
+    st.title("🚴 Sunshine's Fantasy TDF 2025")
     st.markdown("### General Classification Standings")
     
     # Add refresh button with mobile-friendly layout
